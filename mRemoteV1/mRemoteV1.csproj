@@ -60,6 +60,9 @@
     <Reference Include="Geckofx-Winforms, Version=45.0.34.0, Culture=neutral, PublicKeyToken=3209ac31600d1857, processorArchitecture=x86">
       <HintPath>..\packages\Geckofx45.45.0.34\lib\net45\Geckofx-Winforms.dll</HintPath>
     </Reference>
+    <Reference Include="INIFileParser, Version=2.5.2.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ini-parser.2.5.2\lib\net20\INIFileParser.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
     </Reference>
@@ -168,8 +171,10 @@
     <Compile Include="Config\DataProviders\FileBackupPruner.cs" />
     <Compile Include="Config\DataProviders\InMemoryStringDataProvider.cs" />
     <Compile Include="Config\ILoader.cs" />
+    <Compile Include="Config\Import\MobaXTermConnectionImporter.cs" />
     <Compile Include="Config\Import\MRemoteNGCsvImporter.cs" />
     <Compile Include="Config\ISaver.cs" />
+    <Compile Include="Config\Serializers\ConnectionSerializers\MobaXTerm\MobaXTermConnectionsDeserializer.cs" />
     <Compile Include="Config\Serializers\ConnectionSerializers\Xml\XmlConnectionNodeSerializer27.cs" />
     <Compile Include="Config\Serializers\ConnectionSerializers\MsSql\LocalConnectionPropertiesModel.cs" />
     <Compile Include="Config\Serializers\ConnectionSerializers\MsSql\LocalConnectionPropertiesXmlSerializer.cs" />
