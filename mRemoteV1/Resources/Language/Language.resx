@@ -2794,13 +2794,13 @@ Development Channel includes Alphas, Betas &amp; Release Candidates.</value>
     <value>Environment</value>
   </data>
   <data name="EncryptionTestResultMessage" xml:space="preserve">
-      <value>Encrypting {0} entries using {1}/{2} and {3} iterations took {4} seconds.</value>
+    <value>Encrypting {0} entries using {1}/{2} and {3} iterations took {4} seconds.</value>
   </data>
   <data name="EncryptionTest" xml:space="preserve">
-      <value>Encryption Test</value>
+    <value>Encryption Test</value>
   </data>
   <data name="TestSettings" xml:space="preserve">
-      <value>Test Settings</value>
+    <value>Test Settings</value>
   </data>
   <data name="strPropertyDescriptionUseVmId" xml:space="preserve">
     <value>Use VM ID to connect to VM running on Hyper-V.</value>
@@ -2813,5 +2813,11 @@ Development Channel includes Alphas, Betas &amp; Release Candidates.</value>
   </data>
   <data name="strPropertyNameVmId" xml:space="preserve">
     <value>VM ID</value>
+  </data>
+  <data name="strFilterMobaXTerm" xml:space="preserve">
+    <value>MobaXTerm connection files (*.ini)</value>
+  </data>
+  <data name="strMobaProtocolNotSupported" xml:space="preserve">
+    <value>Connection not imported, protocol {1} is not (yet) supported</value>
   </data>
 </root>

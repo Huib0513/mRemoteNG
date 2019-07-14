@@ -19,7 +19,7 @@ namespace mRemoteNG {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Language {
@@ -2364,6 +2364,15 @@ namespace mRemoteNG {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MobaXTerm connection files (*.ini).
+        /// </summary>
+        internal static string strFilterMobaXTerm {
+            get {
+                return ResourceManager.GetString("strFilterMobaXTerm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to mRemote CSV Files (*.csv).
         /// </summary>
         internal static string strFiltermRemoteCSV {
@@ -4061,6 +4070,15 @@ namespace mRemoteNG {
         internal static string strMinimizeToSysTray {
             get {
                 return ResourceManager.GetString("strMinimizeToSysTray", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection not imported, protocol {1} is not (yet) supported.
+        /// </summary>
+        internal static string strMobaProtocolNotSupported {
+            get {
+                return ResourceManager.GetString("strMobaProtocolNotSupported", resourceCulture);
             }
         }
         

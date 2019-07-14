@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using mRemoteNG.Connection;
-/*using mRemoteNG.Connection.Protocol;
-using mRemoteNG.Connection.Protocol.Http;
+using mRemoteNG.Connection.Protocol;
+/*using mRemoteNG.Connection.Protocol.Http;
 using mRemoteNG.Connection.Protocol.ICA;
 using mRemoteNG.Connection.Protocol.RDP;
 using mRemoteNG.Connection.Protocol.VNC;*/
@@ -17,16 +17,35 @@ namespace mRemoteNG.Config.Serializers.Csv
 {
     public class MobaXTermConnectionsDeserializer : IDeserializer<string, ConnectionTreeModel>
     {
-        // TODO FIRST! Refactor completely, building up tree as we go
-
+        private static readonly Dictionary<string, ProtocolType> _connectionTypes = new Dictionary<string, ProtocolType>
+                {
+                    {"0", ProtocolType.SSH2 },
+                    {"1", ProtocolType.Telnet },
+                    {"2", ProtocolType.Rlogin },
+                    {"4", ProtocolType.RDP },
+                    {"5", ProtocolType.VNC },
+                    {"11", ProtocolType.HTTPS } // TODO: Check for HTTP, ProtocolType.HTTP = 7
+                        //{"3", "Xdmcp" }, // Not supported?
+                        //{"6", "FTP"}, // Not supported?
+                        //{"7", "sFTP" }, // Not supported?
+                        //{"8", "Serial" }, // Open a serial port
+                        //{"9", "File" }, // Open a local file
+                        //{"10", "Shell" }, //Local shell
+                        //{"12", "Mosh" },
+                        //{"13", "AWS S3" },
+                        //{"14", "Windows Subsystem for Linux"}
+                        //ProtocolType.RAW,
+                        //ProtocolType.ICA = 9,
+                        //ProtocolType.IntApp = 20
+        };
 
         public ConnectionTreeModel Deserialize(string serializedData)
         {
             var iniparser = new IniDataParser();
             var inidata = iniparser.Parse(serializedData);
 
-            // used to map a connectioninfo to its parent
-            var parentMapping = new Dictionary<ConnectionInfo, string>();
+            // Root of the new connection tree
+            var root = new RootNodeInfo(RootNodeType.Connection);
 
             //Iterate through all the sections in the ini file
             foreach (SectionData section in inidata.Sections)
@@ -34,9 +53,8 @@ namespace mRemoteNG.Config.Serializers.Csv
                 // Multiple folders may exist starting with "Bookmarks_", these are folders containing connections in a tree structure
                 if ("Bookmarks" == section.SectionName.Substring(0, Math.Min(9, section.SectionName.Length)))
                 {
-                    var folderMapping = ParseFolder(section);
-
-                    // TODO hierarchy
+                    root.AddChild(ParseFolder(section));
+                    // TODO hierarchy: fix root node and create tree of subnodes
                     /*
                         [Bookmarks_2]
                         SubRep=Test
@@ -46,69 +64,24 @@ namespace mRemoteNG.Config.Serializers.Csv
                         [Bookmarks_3]
                         SubRep=Test\Test level 2
                     */
-                    foreach (var connection in folderMapping)
-                    {
-                        parentMapping.Add(connection.Key, connection.Value);
-                    }
                 }
             }
 
-            var root = CreateTreeStructure(parentMapping);
             var connectionTreeModel = new ConnectionTreeModel();
             connectionTreeModel.AddRootNode(root);
             return connectionTreeModel;
         }
 
-        private RootNodeInfo CreateTreeStructure(Dictionary<ConnectionInfo, string> parentMapping)
+        private ContainerInfo ParseFolder(SectionData folder)
         {
-            var root = new RootNodeInfo(RootNodeType.Connection);
-
-            foreach (var node in parentMapping)
-            {
-                // no parent mapped, add to root
-                if (string.IsNullOrEmpty(node.Value))
-                {
-                    root.AddChild(node.Key);
-                    continue;
-                }
-
-                // search for parent in the list by GUID
-                var parent = parentMapping
-                            .Keys
-                            .OfType<ContainerInfo>()
-                            .FirstOrDefault(info => info.ConstantID == node.Value);
-
-                if (parent != null)
-                {
-                    parent.AddChild(node.Key);
-                }
-                else
-                {
-                    root.AddChild(node.Key);
-                }
-            }
-
-            return root;
-        }
-
-        private Dictionary<ConnectionInfo, string> ParseFolder(SectionData folder)
-        {
-            var folderMapping = new Dictionary<ConnectionInfo, string>();
-
+            // Create Container for the current list of connections
+            var folderId = Guid.NewGuid().ToString();
             var folderName = folder.Keys["SubRep"];
-            var folderId = "";
+            var connectionFolder = new ContainerInfo(folderId);
+            connectionFolder.Name = folderName;
 
-            if (!string.IsNullOrEmpty(folderName))
-            {
-                // Create container for folder if it has a name, otherwise it is the root folder
-                // TODO Figure out if there is an "Id" in MobaXTerm (and the relevance if there is)
-                // TODO Add icon to folder
-                folderId = Guid.NewGuid().ToString();
-
-                var connectionRecord = new ContainerInfo(folderId);
-                connectionRecord.Name = folderName;
-                folderMapping.Add(connectionRecord, "");
-            }
+            // TODO Figure out if there is an "Id" in MobaXTerm (and the relevance if there is)
+            // TODO Add icon to folder
 
             //Iterate through all the keys in the section, these contain the connections
             foreach (KeyData connection in folder.Keys)
@@ -117,14 +90,15 @@ namespace mRemoteNG.Config.Serializers.Csv
                 if (("SubRep" != connection.KeyName) && ("ImgNum" != connection.KeyName))
                 {
                     var connectionInfo = ParseSingleBookmark(connection.KeyName, connection.Value);
-                    folderMapping.Add(connectionInfo, folderId); // Second argument is the parent
+                    connectionFolder.AddChild(connectionInfo);
+                    //folderMapping.Add(connectionInfo, folderId); // Second argument is the parent
                 }
             }
 
-            return folderMapping;
+            return connectionFolder;
         }
 
-        private ConnectionInfo ParseSingleBookmark(string name, string values)
+        private ConnectionInfo ParseSingleBookmark(string name, string value)
         {
             // TODO Figure out if there is an "Id" in MobaXTerm (and the relevance if there is)
             var nodeId = Guid.NewGuid().ToString();
@@ -134,21 +108,37 @@ namespace mRemoteNG.Config.Serializers.Csv
             connectionRecord.Name = string.IsNullOrEmpty(name)
                 ? "Unnamed connection"
                 : name;
+            connectionRecord.Hostname = configvalues[1];
+
+            // All values are seperated by '%'
+            var configvalues = value.Split('%');
+
+            // The first part of the values looks like "#3-digit icon id#protocol id": split based on #
+            // Try to retrieve the connection type, if it does not exist, the protocol is not supported
+            if (_connectionTypes.TryGetValue(configvalues[0].Split('#')[2], out var connectionType))
+            {
+                // TODO Check if the field order is SSH protocol specific!
+                connectionRecord.Protocol = connectionType;
+                connectionRecord.Port = configvalues[2];
+                connectionRecord.Username = configvalues[3];
+
+            }
+            else
+            {
+                connectionRecord.Description = Language.strMobaProtocolNotSupported;
+            }
+
             /*
-            *          TODO: copy / paste from CsvConnections deserializer: actually parse the current value
-                        connectionRecord.Description =
-                            headers.Contains("Description") ? connectionCsv[headers.IndexOf("Description")] : "";
-                        connectionRecord.Icon = headers.Contains("Icon") ? connectionCsv[headers.IndexOf("Icon")] : "";
-                        connectionRecord.Panel = headers.Contains("Panel") ? connectionCsv[headers.IndexOf("Panel")] : "";
-                        connectionRecord.Username = headers.Contains("Username") ? connectionCsv[headers.IndexOf("Username")] : "";
-                        connectionRecord.Password = headers.Contains("Password") ? connectionCsv[headers.IndexOf("Password")] : "";
-                        connectionRecord.Domain = headers.Contains("Domain") ? connectionCsv[headers.IndexOf("Domain")] : "";
-                        connectionRecord.Hostname = headers.Contains("Hostname") ? connectionCsv[headers.IndexOf("Hostname")] : "";
-                        connectionRecord.VmId = headers.Contains("VmId") ? connectionCsv[headers.IndexOf("VmId")] : "";
-                        connectionRecord.PuttySession = headers.Contains("PuttySession") ? connectionCsv[headers.IndexOf("PuttySession")] : "";
-                        connectionRecord.LoadBalanceInfo = headers.Contains("LoadBalanceInfo")
-                            ? connectionCsv[headers.IndexOf("LoadBalanceInfo")]
-                            : "";
+            *          TODO: 
+                        connectionRecord.Description;
+                        connectionRecord.Icon;
+                        connectionRecord.Password;
+                        connectionRecord.Domain;
+                        connectionRecord.Hostname;
+                        connectionRecord.VmId;
+                        connectionRecord.PuttySession;
+                        connectionRecord.LoadBalanceInfo;
+                        And the rest :)
             */
 
             return connectionRecord;

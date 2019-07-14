@@ -23,13 +23,13 @@ namespace mRemoteNG.App
                     openFileDialog.Multiselect = true;
 
                     var fileTypes = new List<string>();
-                    fileTypes.AddRange(new[] { Language.strFilterAllImportable, "*.xml;*.rdp;*.rdg;*.dat;*.csv;*.ini" });
+                    fileTypes.AddRange(new[] {Language.strFilterAllImportable, "*.xml;*.rdp;*.rdg;*.dat;*.csv;*.ini" });
                     fileTypes.AddRange(new[] {Language.strFiltermRemoteXML, "*.xml"});
                     fileTypes.AddRange(new[] {Language.strFiltermRemoteCSV, "*.csv"});
                     fileTypes.AddRange(new[] {Language.strFilterRDP, "*.rdp"});
                     fileTypes.AddRange(new[] {Language.strFilterRdgFiles, "*.rdg"});
                     fileTypes.AddRange(new[] {Language.strFilterPuttyConnectionManager, "*.dat"});
-                    fileTypes.AddRange(new[] { Language.strFilterMobaXTerm, "*.ini" });
+                    fileTypes.AddRange(new[] {Language.strFilterMobaXTerm, "*.ini" });
                     fileTypes.AddRange(new[] {Language.strFilterAll, "*.*"});
 
                     openFileDialog.Filter = string.Join("|", fileTypes.ToArray());
