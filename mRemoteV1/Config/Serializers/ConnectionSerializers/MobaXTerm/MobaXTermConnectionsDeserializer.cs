@@ -103,25 +103,26 @@ namespace mRemoteNG.Config.Serializers.Csv
             // TODO Figure out if there is an "Id" in MobaXTerm (and the relevance if there is)
             var nodeId = Guid.NewGuid().ToString();
 
-            var connectionRecord = new ConnectionInfo(nodeId);
+            // TODO Check if the field order is SSH protocol specific!
+            // All values are seperated by '%'
+            var configvalues = value.Split('%');
 
+            var connectionRecord = new ConnectionInfo(nodeId);
             connectionRecord.Name = string.IsNullOrEmpty(name)
                 ? "Unnamed connection"
                 : name;
             connectionRecord.Hostname = configvalues[1];
 
-            // All values are seperated by '%'
-            var configvalues = value.Split('%');
-
             // The first part of the values looks like "#3-digit icon id#protocol id": split based on #
             // Try to retrieve the connection type, if it does not exist, the protocol is not supported
             if (_connectionTypes.TryGetValue(configvalues[0].Split('#')[2], out var connectionType))
             {
-                // TODO Check if the field order is SSH protocol specific!
                 connectionRecord.Protocol = connectionType;
-                connectionRecord.Port = configvalues[2];
-                connectionRecord.Username = configvalues[3];
+                var portnumber = 0;
+                if (Int32.TryParse(configvalues[2], out portnumber))
+                    connectionRecord.Port = portnumber;
 
+                connectionRecord.Username = configvalues[3];
             }
             else
             {
