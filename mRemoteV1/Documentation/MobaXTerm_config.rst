@@ -7,7 +7,7 @@ Nr | Meaning | Example value | Format
 1 | Connection name and type |MyPi (Huib) [SSH]=#135#0 | `Connection name`=#`Icon ID`#`Connection type`
 2 | Hostname |192.168.1.128 | String
 3 | Port number |22 | String
-4 | Username |huib | String
+4 | Username |TestUser | String
 5 | | | String
 6 | |0 | String
 7 | |-1 | String
